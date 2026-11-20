@@ -1,0 +1,35 @@
+---
+title: "Tokens are getting cheaper. Why are AI bills exploding?"
+description: "Agents resend their whole context on every step. How LangChain, Notion and Checkr keep inference costs under control."
+date: "2026-11-17"
+topic: "agents"
+featured: true
+video: "inference-cost"
+draft: true
+---
+
+Companies planned to roughly double their AI spend this year. On average they spent **4.7x** last year's amount ([Menlo Ventures, 2026](https://menlovc.com/perspective/2026-the-state-of-enterprise-ai/)).
+
+The reason is agents. A chatbot answers once. An agent plans, calls tools, checks its work and loops, and on every step it resends the whole context: system prompt, tool definitions and the conversation so far. Anthropic found agents use about **4x** the tokens of a chat, and multi-agent systems about **15x** ([Anthropic Engineering](https://www.anthropic.com/engineering/multi-agent-research-system)).
+
+## 1. Price the task, not the token
+
+Measure what one finished job costs, from trace to total. Only **19%** of companies monitor AI costs continuously ([Cloudera survey via ITPro](https://www.itpro.com/technology/artificial-intelligence/ais-price-tag-is-starting-to-shape-its-path-through-the-enterprise-89-percent-of-enterprises-have-scaled-back-ai-deployments-over-token-costs-and-theyre-still-struggling-to-track-spending)).
+
+## 2. Route by difficulty
+
+LangChain's Open SWE coding agent picks a model tier for every task. Median cost per task fell from **$2.61 to $0.94** with no drop in merged PRs ([LangChain](https://www.langchain.com/blog/how-to-build-a-model-router-in-the-harness)).
+
+## 3. Cache the repeated prefix
+
+Every request resends the same system prompt and tool definitions. Prompt caching stores that prefix so it is billed at a fraction of the price. Notion uses it in Notion AI and cut costs by up to **90%** ([Claude customer story](https://claude.com/customers/notion)).
+
+## 4. Fine-tune a small specialist
+
+Checkr replaced GPT-4 with a small open model trained on its own background-check data: about 5x cheaper, much faster and more accurate ([Predibase](https://predibase.com/blog/how-checkr-streamlines-background-checks-with-fine-tuned-small-language)).
+
+## Bonus: batch what is not urgent
+
+Batch APIs from OpenAI, Anthropic and Google cost **50%** less.
+
+Big models are not the problem. Using them for everything is.

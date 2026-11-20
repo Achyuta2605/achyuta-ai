@@ -1,103 +1,73 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ParticlePortrait } from "@/components/ParticlePortrait";
+import { PostCard, ProjectCard, VideoCard, SectionHeader } from "@/components/Cards";
+import { getPosts } from "@/lib/posts";
+import { projects } from "@/lib/projects";
+import { publishedVideos } from "@/lib/videos";
+import { site } from "@/lib/site";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const posts = getPosts();
+  const featuredPosts = [...posts.filter((p) => p.featured), ...posts.filter((p) => !p.featured)].slice(0, 3);
+  const featuredProjects = projects.filter((p) => p.featured).slice(0, 3);
+  const latestVideos = [...publishedVideos].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 4);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  return (
+    <div className="mx-auto max-w-5xl px-4 sm:px-6">
+      <section className="grid items-center gap-8 py-14 md:grid-cols-[1.1fr_1fr] md:py-24">
+        <div>
+          <p className="font-mono text-sm text-accent">{site.role} · Healthcare & life sciences AI</p>
+          <h1 className="mt-4 text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">{site.headline}</h1>
+          <p className="mt-6 max-w-xl text-muted">{site.summary}</p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/projects" className="rounded-full bg-fg px-5 py-2.5 text-sm font-medium text-bg hover:bg-accent">See my work</Link>
+            <Link href="/resume" className="rounded-full border border-line px-5 py-2.5 text-sm hover:border-accent">Resume</Link>
+            <a href={site.links.linkedin} className="rounded-full border border-line px-5 py-2.5 text-sm hover:border-accent">LinkedIn</a>
+          </div>
+          <dl className="mt-10 grid max-w-md grid-cols-3 gap-4 border-t border-line pt-6">
+            <div><dt className="text-xs text-muted">Projects</dt><dd className="text-2xl font-semibold">{projects.length}</dd></div>
+            <div><dt className="text-xs text-muted">Articles</dt><dd className="text-2xl font-semibold">{posts.length}</dd></div>
+            <div><dt className="text-xs text-muted">Videos</dt><dd className="text-2xl font-semibold">{publishedVideos.length}</dd></div>
+          </dl>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <ParticlePortrait className="aspect-square w-full max-w-[460px] justify-self-center" />
+      </section>
+
+      <section className="py-10">
+        <SectionHeader title="Selected projects" href="/projects" />
+        <div className="grid gap-5 md:grid-cols-2">{featuredProjects.map((p) => <ProjectCard key={p.slug} p={p} />)}</div>
+      </section>
+
+      <section className="py-10">
+        <SectionHeader title="Writing" href="/blog" />
+        <div className="grid gap-5 md:grid-cols-3">{featuredPosts.map((p) => <PostCard key={p.slug} p={p} />)}</div>
+      </section>
+
+      <section className="py-10">
+        <SectionHeader title="Latest videos" href="/videos" />
+        <div className="grid grid-cols-2 gap-5 md:grid-cols-4">{latestVideos.map((v) => <VideoCard key={v.slug} v={v} />)}</div>
+      </section>
+
+      <section className="grid gap-8 py-10 md:grid-cols-2">
+        <div>
+          <h2 className="mb-4 text-xl font-semibold">Experience</h2>
+          {site.experience.map((e) => (
+            <div key={e.company} className="border-l border-line pl-4">
+              <p className="font-medium">{e.title} · {e.company}</p>
+              <p className="text-sm text-muted">{e.start} – {e.end}</p>
+            </div>
+          ))}
+        </div>
+        <div>
+          <h2 className="mb-4 text-xl font-semibold">Education</h2>
+          {site.education.map((e) => (
+            <div key={e.school} className="border-l border-line pl-4">
+              <p className="font-medium">{e.degree}</p>
+              <p className="text-sm text-muted">{e.school}</p>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

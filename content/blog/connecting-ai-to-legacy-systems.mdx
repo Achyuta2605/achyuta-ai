@@ -1,0 +1,36 @@
+---
+title: "How real teams connect AI to 40-year-old systems"
+description: "84% of CIOs have cancelled an AI project over legacy systems. Four integration patterns from BCC Iccrea, RBC, FICUS Health and Morgan Stanley."
+date: "2026-11-13"
+topic: "enterprise-ai"
+featured: true
+video: "legacy-systems"
+---
+
+**84%** of tech leaders at large companies have cancelled an AI project because of their old systems, according to a GFT survey of 945 CIOs and CTOs published in September 2026 ([GFT / Wakefield Research](https://secure.businesswire.com/news/home/20260929802930/en/New-AI-Research-from-GFT-Technologies-84-of-CIOs-Have-Canceled-an-AI-Project-Over-Legacy-System-Limits)). The AI usually works. What blocks it is the system of record it has to talk to.
+
+There are four patterns, from safest to riskiest.
+
+## 1. Add a front door: an API
+
+Italy's BCC Iccrea banking group put APIs on its mainframe and cut integration work by **65%** ([IBM case study](https://www.ibm.com/case-studies/bcc-iccrea-group)). Once a mainframe has an API, an agent can call it as a tool: IBM now exposes z/OS Connect APIs as MCP tools ([IBM](https://community.ibm.com/community/user/blogs/andrew-smithson/2025/11/13/supercharge-your-ai-agent-with-live-mainframe-data)).
+
+## 2. Give the AI a copy, not the original
+
+RBC streams mainframe data into a live copy with Kafka. Applications read the copy, so the old system does less work ([Confluent](https://www.confluent.io/customers/rbc/)). For AI this is the safe default: reads go to the copy, and only approved writes go back.
+
+## 3. No API at all? Use the screen like a person
+
+FICUS Health used an AskUI computer-use agent to type data into old hospital systems and cut documentation time by **70%** ([AskUI](https://www.askui.com/case-studies/ficus-health-streamlines-rehab-documentation-with-askui)). It breaks when a screen changes, so treat it as the last resort.
+
+## 4. Replace it piece by piece
+
+Morgan Stanley's in-house tool DevGen.AI turned **9 million lines** of old code into plain English and saved about **280,000 hours** ([CIO Dive](https://www.ciodive.com/news/ai-shifts-mainframe-modernization-strategy/825677/)).
+
+## The warning
+
+In 2018, TSB moved its customers to a new system in one weekend. Services were disrupted for months and regulators fined the bank **£48.65M** ([Finextra](https://www.finextra.com/newsarticle/41525/tsb-fined-486-million-over-operational-resilience-failures)). Big-bang migrations are where legacy projects go wrong.
+
+## Bonus
+
+Amazon used AI to upgrade old Java applications and estimates it saved **4,500 developer-years** ([The Decoder](https://the-decoder.com/amazons-ai-assistant-saves-4500-years-of-development-time-ceo-andy-jassy-says/)).
