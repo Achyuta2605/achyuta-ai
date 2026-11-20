@@ -1,5 +1,5 @@
 export const site = {
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://achyuta.vercel.app",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://achyuta-ai.vercel.app",
   name: "Achyuta",
   role: "AI Engineer",
   headline: "I build production AI agents, and the guardrails that keep them safe.",
