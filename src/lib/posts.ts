@@ -15,6 +15,11 @@ export type PostMeta = {
   featured?: boolean;
   video?: string;
   draft?: boolean;
+  tldr?: string;
+  updated?: string;
+  cover?: string;
+  faq?: { q: string; a: string }[];
+  keywords?: string[];
   minutes: number;
 };
 
