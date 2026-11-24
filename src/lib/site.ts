@@ -8,7 +8,7 @@ export const site = {
   location: "India",
   openTo: "AI engineer and forward deployed engineer roles (India, US, Europe, UAE, remote)",
   links: {
-    linkedin: "https://www.linkedin.com/in/", // TODO: Achyuta's exact LinkedIn URL
+    linkedin: "", // TODO: Achyuta's exact LinkedIn URL
     github: "https://github.com/Achyuta2605",
     email: "", // TODO: public contact email
   },

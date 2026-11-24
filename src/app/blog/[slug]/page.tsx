@@ -35,7 +35,7 @@ export default async function PostPage({ params }: Props) {
   const related = getPosts().filter((p) => p.topic === meta.topic && p.slug !== meta.slug).slice(0, 3);
   return (
     <article className="mx-auto max-w-2xl px-4 py-14 sm:px-6">
-      <JsonLd data={{ "@context": "https://schema.org", "@type": "BlogPosting", headline: meta.title, description: meta.description, datePublished: meta.date, dateModified: meta.updated ?? meta.date, image: meta.cover ? `${site.url}${meta.cover}` : undefined, keywords: meta.keywords?.join(", "), author: { "@type": "Person", name: site.name, url: `${site.url}/about`, jobTitle: site.role, sameAs: [site.links.linkedin, site.links.github] }, mainEntityOfPage: `${site.url}/blog/${meta.slug}` }} />
+      <JsonLd data={{ "@context": "https://schema.org", "@type": "BlogPosting", headline: meta.title, description: meta.description, datePublished: meta.date, dateModified: meta.updated ?? meta.date, image: meta.cover ? `${site.url}${meta.cover}` : undefined, keywords: meta.keywords?.join(", "), author: { "@type": "Person", name: site.name, url: `${site.url}/about`, jobTitle: site.role, sameAs: [site.links.linkedin, site.links.github].filter(Boolean) }, mainEntityOfPage: `${site.url}/blog/${meta.slug}` }} />
       {meta.faq && meta.faq.length > 0 && (
         <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: meta.faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) }} />
       )}
