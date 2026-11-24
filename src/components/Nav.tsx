@@ -32,7 +32,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-10 text-sm text-muted sm:flex-row sm:justify-between sm:px-6">
         <p>© {new Date().getFullYear()} {site.name}. {site.role}.</p>
         <div className="flex gap-5">
-          <a href={site.links.linkedin} rel="me">LinkedIn</a>
+          {site.links.linkedin && <a href={site.links.linkedin} rel="me">LinkedIn</a>}
           <a href={site.links.github} rel="me">GitHub</a>
           <a href="/rss.xml">RSS</a>
         </div>

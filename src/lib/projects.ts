@@ -12,7 +12,7 @@ export type Project = {
   repo?: string;
 };
 
-export const projects: Project[] = [
+const allProjects: Project[] = [
   {
     slug: "agentoverwatch",
     name: "AgentOverwatch",
@@ -50,3 +50,6 @@ export const projects: Project[] = [
     repo: "https://github.com/Achyuta2605/AMRDrugX",
   },
 ];
+
+// Hide projects whose write-up is not ready yet.
+export const projects = allProjects.filter((p) => !p.problem.startsWith("TODO"));

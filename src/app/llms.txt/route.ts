@@ -16,7 +16,6 @@ ${projects.map((p) => `- [${p.name}](${site.url}/projects/${p.slug}): ${p.taglin
 ${getPosts().map((p) => `- [${p.title}](${site.url}/blog/${p.slug}): ${p.description}`).join("\n")}
 
 ## Contact
-- LinkedIn: ${site.links.linkedin}
 - GitHub: ${site.links.github}
 `;
   return new Response(body, { headers: { "Content-Type": "text/plain; charset=utf-8" } });

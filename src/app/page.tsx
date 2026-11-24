@@ -22,7 +22,7 @@ export default function Home() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/projects" className="rounded-full bg-fg px-5 py-2.5 text-sm font-medium text-bg hover:bg-accent">See my work</Link>
             <Link href="/resume" className="rounded-full border border-line px-5 py-2.5 text-sm hover:border-accent">Resume</Link>
-            <a href={site.links.linkedin} className="rounded-full border border-line px-5 py-2.5 text-sm hover:border-accent">LinkedIn</a>
+            {site.links.linkedin ? <a href={site.links.linkedin} className="rounded-full border border-line px-5 py-2.5 text-sm hover:border-accent">LinkedIn</a> : <a href={site.links.github} className="rounded-full border border-line px-5 py-2.5 text-sm hover:border-accent">GitHub</a>}
           </div>
           <dl className="mt-10 grid max-w-md grid-cols-3 gap-4 border-t border-line pt-6">
             <div><dt className="text-xs text-muted">Projects</dt><dd className="text-2xl font-semibold">{projects.length}</dd></div>
