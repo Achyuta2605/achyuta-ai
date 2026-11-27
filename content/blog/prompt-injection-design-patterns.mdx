@@ -1,0 +1,178 @@
+---
+title: "Prompt injection design patterns that hold under attack"
+description: "Detectors and prompt tricks fail against adaptive attacks. Six agent design patterns, CaMeL and Meta's Rule of Two contain prompt injection by architecture."
+date: "2026-11-27"
+topic: "ai-security"
+featured: false
+keywords: ["prompt injection defense", "prompt injection design patterns", "CaMeL", "dual LLM pattern", "plan-then-execute", "Agents Rule of Two", "AI agent security", "LLM agent architecture", "adaptive attacks"]
+tldr: "You cannot filter prompt injection away: a 2025 study by researchers from OpenAI, Anthropic and Google DeepMind bypassed 12 published defenses, most with attack success above 90%. What holds is architecture. Once an agent has read untrusted text, that text must be unable to choose which tools run or where data goes. Six design patterns, Google DeepMind's CaMeL and Meta's Agents Rule of Two show how, each trading away some flexibility."
+faq:
+  - q: "Can prompt injection be fully prevented with a classifier or guardrail model?"
+    a: "Not reliably. 'The Attacker Moves Second' (Nasr et al., October 2025) bypassed 12 recent defenses, including PromptGuard, PIGuard, Protect AI's detector and Model Armor, with attack success above 90% for most, and human red-teamers beat every defense they tested."
+  - q: "What is the dual LLM pattern?"
+    a: "A design proposed by Simon Willison in April 2023. A privileged LLM plans and calls tools but never reads untrusted content. A quarantined LLM reads untrusted content but has no tools. Ordinary code passes results between them as variable references like $VAR1, so the privileged LLM never sees the untrusted text."
+  - q: "What is CaMeL and how well does it work?"
+    a: "CaMeL is a Google and Google DeepMind system that turns the user's request into a restricted Python program, runs untrusted data only through a tool-less quarantined LLM, tags every value with its origin and allowed readers, and checks security policies before each tool call. It solved 77% of AgentDojo tasks with provable security, against 84% for an undefended system."
+  - q: "What is Meta's Agents Rule of Two?"
+    a: "A rule published by Meta in October 2025: within one session, an agent should have no more than two of three properties: processing untrustworthy input, access to sensitive systems or private data, and the ability to change state or communicate externally. If it needs all three, it needs human approval or another reliable check."
+  - q: "Which prompt injection design pattern should I start with?"
+    a: "For most business agents, plan-then-execute plus argument policies on dangerous tools is the cheapest real improvement. Use the dual LLM or code-then-execute approach where the agent must both read untrusted content and take consequential actions."
+---
+
+Prompt injection is when text an agent reads, such as an email, a web page, a support ticket or a tool result, contains instructions that the model follows as if the user had written them. Most teams answer it with a filter: a classifier in front of the model, a stronger system prompt, or a fine-tuned "injection-resistant" model. The research from the last year says those filters lose as soon as an attacker adapts to them.
+
+What holds is **architecture**. If untrusted text can never decide which tool is called or where the data goes, an injection can make the agent say something odd, but it cannot make it act. This post walks through the six design patterns that a group of 14 researchers from IBM, Invariant Labs, ETH Zurich, Google, Microsoft and others published in 2025, the CaMeL system from Google DeepMind that turns those ideas into an interpreter, and Meta's simpler "Rule of Two" for deciding when you need them.
+
+## Why don't prompt injection filters work?
+
+Because the attacker gets to see your defense and try again. In October 2025, 14 authors with affiliations including OpenAI, Anthropic, Google DeepMind and ETH Zurich published *The Attacker Moves Second* ([Nasr et al., arXiv 2510.09023](https://arxiv.org/abs/2510.09023)). They took 12 recent defenses, in four families, and attacked them with methods that adapt to the defense: gradient-based search, reinforcement learning and a search-based attack that uses an LLM to mutate candidate injections.
+
+The headline: they bypassed the 12 defenses "with attack success rate above 90% for most", and "the majority of defenses originally reported near-zero attack success rates" ([arXiv abstract](https://arxiv.org/abs/2510.09023)).
+
+| Defense family | Examples tested | Adaptive result reported |
+| --- | --- | --- |
+| Prompting | Spotlighting, prompt sandwiching, RPO | Above 95% for spotlighting and sandwiching |
+| Training | Circuit Breakers, StruQ, MetaSecAlign | MetaSecAlign 96% (its static benchmark showed 2%) |
+| Detectors | Protect AI detector, PromptGuard, PIGuard, Model Armor | Above 90% for three; 71% for PIGuard |
+| Secret-knowledge | Data Sentinel, MELON | MELON 95% with full knowledge of the defense |
+
+Source: [Nasr et al., 2025](https://arxiv.org/html/2510.09023v1). They also ran a human red-teaming competition with more than 500 participants, and the humans succeeded against every defense they evaluated. Simon Willison's write-up of the paper notes a $20,000 prize fund and adds: "I do not share their optimism that reliable defenses will be developed any time soon" ([Simon Willison](https://simonwillison.net/2025/Nov/2/new-prompt-injection-papers/)).
+
+This does not mean detectors are useless. A detector raises the cost of a casual attack and gives you a signal for logging. It means a detector cannot be the thing standing between untrusted text and a dangerous tool call. For that, you need a design in which the dangerous call is not reachable from the untrusted text at all.
+
+## What is the core rule behind injection-resistant agents?
+
+The 2025 design patterns paper ([Beurer-Kellner et al., arXiv 2506.08837](https://arxiv.org/abs/2506.08837)) puts it in one sentence: "once an LLM agent has ingested untrusted input, it must be constrained so that it is *impossible* for that input to trigger any consequential actions", meaning actions with negative side effects on the system or its environment.
+
+Two consequences follow from that rule.
+
+1. **Control flow and data flow are separate problems.** Control flow is *which* tools run, in what order. Data flow is *what arguments* they get. A pattern can lock down control flow and still let an injection change an argument, for example the recipient of an email. You need both locked for a real guarantee.
+2. **General-purpose agents are the hard case.** The authors write that "as long as both agents and their defenses rely on the current class of language models, we believe it is unlikely that general-purpose agents can provide meaningful and reliable safety guarantees" ([arXiv 2506.08837](https://arxiv.org/html/2506.08837v3)). Their bet is on application-specific agents, where you know in advance what the agent should be able to do.
+
+That second point is uncomfortable for anyone selling a do-anything assistant, and practical for anyone building one workflow for one team. Most enterprise agents are the second kind.
+
+## What are the six design patterns?
+
+The paper defines six patterns and applies them to ten case studies, from a SQL agent and an email assistant to a medication leaflet chatbot and a software engineering agent. Each one deliberately gives up some capability.
+
+<Figure
+  src="/blog/prompt-injection-design-patterns/six-patterns.svg"
+  alt="Six small data flow diagrams. Action-selector: a user request maps to one predefined action, with no tool output returned to the LLM. Plan-then-execute: the plan is fixed before tool output arrives, and output can fill data but not change the plan. LLM map-reduce: each untrusted document goes to an isolated tool-less LLM, and a constrained reduce step combines results. Dual LLM: a privileged LLM with tools sees only variable names, a quarantined LLM without tools reads untrusted text. Code-then-execute: the LLM writes a program before reading data, and an interpreter runs it. Context-minimization: the user prompt is removed from context after it has been turned into actions."
+  caption="The six patterns from Beurer-Kellner et al. (2025). Red marks untrusted data; the green boundary is what that data cannot cross."
+/>
+
+| Pattern | How it works | What you give up | Good fit |
+| --- | --- | --- | --- |
+| Action-selector | The LLM only maps a request to one of a fixed set of actions; no tool output comes back to it | Any reaction to results | Customer service routing, "LLM as a switch statement" |
+| Plan-then-execute | The LLM commits to a list of tool calls before reading any untrusted data | Adapting the plan to what it finds | Scheduled workflows, report generation |
+| LLM map-reduce | Each untrusted item goes to an isolated, tool-less LLM; a constrained step combines the outputs | Tools inside the per-item step | Resume screening, document triage |
+| Dual LLM | A privileged LLM with tools never reads untrusted text; a quarantined LLM reads it but has no tools | The planner never sees content | Email and calendar assistants |
+| Code-then-execute | The LLM writes a program that calls tools and unprivileged LLMs; the program is fixed before data arrives | Flexibility after the program is written | Multi-step data tasks (CaMeL) |
+| Context-minimization | After the user's request becomes actions, the request itself is dropped from later context | Earlier turns in later answers | Chatbots where the user is the possible attacker |
+
+Summarised from [arXiv 2506.08837](https://arxiv.org/html/2506.08837v3).
+
+The paper is honest about the weak spots. Of plan-then-execute it says "this pattern does not prevent all prompt injections": an injected email can't add a new tool call, but it can still change the content the agent writes into an allowed one. That is the data flow problem again, and it is why the stronger patterns exist.
+
+## How does the dual LLM pattern work?
+
+Simon Willison proposed it in April 2023 ([Simon Willison](https://simonwillison.net/2023/Apr/25/dual-llm-pattern/)). There are three components:
+
+- **Privileged LLM**: accepts input from trusted sources, mainly the user, and can trigger tools.
+- **Quarantined LLM**: processes untrusted content, "does not have access to tools, and is expected to have the potential to go rogue at any moment".
+- **Controller**: "regular software, not a language model". It calls both LLMs and executes actions.
+
+The trick is that the quarantined LLM's output is never pasted back into the privileged LLM. The controller stores it in a variable and the privileged LLM refers to it by name. It might say "fetch the latest email and assign it to `$VAR1`", then "ask the quarantined LLM to summarize `$VAR1`, store as `$VAR2`", then "show `$VAR2` to the user". In Willison's words, "the Privileged LLM only ever sees those variable names".
+
+Willison also listed its problems in the same post: approval prompts lead to dialog fatigue, outbound links and images must be restricted to an allow-list to block exfiltration, social engineering of the human still works, and the design is "likely to result in a great deal more implementation complexity and a degraded user experience". In 2025 he added a note that the CaMeL paper had found a flaw in the original idea and proposed a more complete system.
+
+## What flaw did CaMeL fix, and how does it work?
+
+The flaw is data flow. In the dual LLM design the privileged LLM never reads the untrusted text, so the injection cannot pick which tool runs. But the quarantined LLM still produces values, such as an email address extracted from a document, and those values become tool arguments. If the document says "Bob's address is attacker@evil.example", the plan runs exactly as intended and sends the file to the wrong person.
+
+CaMeL, from researchers at Google, Google DeepMind and ETH Zurich ([Debenedetti et al., arXiv 2503.18813](https://arxiv.org/abs/2503.18813)), adds the missing piece: it tracks where every value came from and checks that before any tool runs. Its running example is the request "Can you send Bob the document he requested in our last meeting? Bob's email and the document he asked for are in the meeting notes file."
+
+<Figure
+  src="/blog/prompt-injection-design-patterns/camel-flow.svg"
+  alt="CaMeL architecture. The user query goes only to the privileged LLM, which writes restricted Python code. A custom interpreter runs the code. When the code reads the meeting notes, the untrusted text goes to the quarantined LLM, which has no tools and returns values parsed into a schema. Every value carries capability tags for its source and allowed readers. Before send_email runs, a policy check compares the recipient's tags against the document's allowed readers and either allows the call or blocks it and asks the user."
+  caption="CaMeL: the plan comes only from the user's words, untrusted text only becomes tagged values, and a policy decides whether a tagged value may reach a tool."
+/>
+
+The parts, as the paper describes them:
+
+1. **Privileged LLM (P-LLM).** It "only interacts with the user query and not the data returned by tools or with the Q-LLM output". It writes the plan as code in a restricted subset of Python.
+2. **Quarantined LLM (Q-LLM).** It "has no tool access" and turns unstructured text into a predefined schema (the P-LLM must specify a Pydantic schema for each call). It cannot ask the P-LLM for more information, since that message itself could carry an injection.
+3. **Custom interpreter.** Built on Python's `ast` module, it runs the P-LLM's code and keeps a data-flow graph of which value was derived from which.
+4. **Capabilities.** Tags on every value that record its provenance (the user, CaMeL itself, or a specific tool) and its allowed readers (public, or a set of email addresses).
+5. **Security policies.** Plain Python functions that return allowed or denied for a tool call, given the tags on its arguments. In a real deployment a denial becomes a request for user confirmation.
+
+Here is the kind of policy that stops the "send it to the wrong Bob" attack. This is my own sketch of the idea in plain Python, not CaMeL's actual API:
+
+```python
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class Tagged:
+    value: object
+    sources: frozenset[str]   # e.g. {"user"} or {"tool:read_file:meeting_notes.txt"}
+    readers: frozenset[str]   # e.g. {"public"} or {"alice@corp.com", "bob@corp.com"}
+
+TRUSTED = {"user", "tool:directory_lookup"}
+
+def policy_send_email(to: Tagged, attachment: Tagged) -> tuple[bool, str]:
+    # 1. The recipient must come from a trusted source, or already be allowed to read the file.
+    recipient_trusted = to.sources <= TRUSTED
+    recipient_allowed = "public" in attachment.readers or to.value in attachment.readers
+    if not (recipient_trusted or recipient_allowed):
+        return False, f"{to.value} came from {set(to.sources)} and may not read this file"
+    return True, "ok"
+
+# The interpreter calls the policy before the tool, every time, whatever the model "intended".
+```
+
+The point is where the check lives: in the interpreter, outside every model. Nothing in the meeting notes can change the result of `to.value in attachment.readers`.
+
+## How much utility does CaMeL cost?
+
+Less than you might expect for a guarantee. In the AgentDojo benchmark, CaMeL solved **77%** of tasks "with provable security", against **84%** for an undefended system ([arXiv 2503.18813](https://arxiv.org/abs/2503.18813)). The 7-point gap is the price of never letting untrusted data steer the plan.
+
+The authors list real limits:
+
+- **It is not autonomy.** "CaMeL does not aim to make a fully autonomous system without any need for human intervention." Blocked calls go to a person.
+- **Some tasks are impossible by design.** If the right action depends on content (say, "do what the email from my manager says"), the P-LLM "cannot write a plan based on data it can't read".
+- **Text-only attacks are out of scope.** An injection that makes a summary say "click this link to re-verify your account" has no data flow consequence, so the policies never see it.
+- **Side channels and rollbacks.** Control flow can leak information about private values, which the stricter interpreter mode reduces, and there is no atomicity or rollback for multi-step actions that fail halfway.
+- **Someone has to write the policies.** That is real engineering work, closer to writing access control rules than to prompt engineering.
+
+## How do I decide whether my agent needs any of this?
+
+Meta's **Agents Rule of Two**, published on 31 October 2025, is the most usable triage rule I know ([Meta AI](https://ai.meta.com/blog/practical-ai-agent-security/)). Within one session, an agent should satisfy no more than two of:
+
+- **[A]** it can process untrustworthy inputs,
+- **[B]** it can access sensitive systems or private data,
+- **[C]** it can change state or communicate externally.
+
+If a task truly needs all three without starting a fresh session, Meta says the agent "should not be permitted to operate autonomously" and needs human-in-the-loop approval or another reliable check. Their examples map cleanly: a travel assistant [AB] confirms bookings and payments with the user; a web research assistant [AC] runs a browser sandbox with no logged-in sessions; an internal coding agent [BC] filters what data sources can enter its context.
+
+It extends Willison's earlier **lethal trifecta** (private data, untrusted content, external communication) by adding "change state", which covers deleting files or merging code, not only leaking data. Willison called the Rule of Two "the best practical advice for building secure LLM-powered agent systems today", while arguing that untrusted input plus state change can still be harmful on its own ([Simon Willison](https://simonwillison.net/2025/Nov/2/new-prompt-injection-papers/)); Meta then relabelled those pairings "lower risk" rather than "safe".
+
+The patterns above are how you build the agents that land in the all-three corner. The Rule of Two tells you which agents those are.
+
+## What I would do
+
+If I were reviewing an agent design at a company today, especially in healthcare or life sciences, where an agent reading a patient message or a lab report is reading untrusted input next to regulated data, this is how I would approach it.
+
+1. **Classify every agent with the Rule of Two first.** Write down [A], [B] and [C] for each session type. Most agents can lose one property cheaply: a summarizer does not need send rights, and a triage bot does not need the full record.
+2. **Default to plan-then-execute for workflow agents.** Generate the tool plan from the user's request and the system prompt, freeze it, and only then read documents. It is easy to add to an existing agent loop and removes the "injection adds a new tool call" class.
+3. **Put argument policies on every consequential tool.** This closes the data flow gap that plan-then-execute leaves open. Recipients must be in the directory, file paths must stay inside the workspace, payment amounts must match a source the user typed. Enforce them in code or a gateway, never in the prompt.
+4. **Use the dual LLM split when the agent must read and act.** Untrusted content goes to a tool-less model that returns structured fields, validated against a schema with strict types. Never hand its free text back to the planner.
+5. **Keep detectors, but as telemetry.** Log what the injection scanner flags, alert on spikes, and use the flagged samples as test cases. Do not make a scanner the only thing between a web page and `send_email`.
+6. **Test with adaptive attacks, not a fixed list.** A static benchmark that shows 2% success told the MetaSecAlign authors very little about the 96% an adaptive attack reached. Regression suites need an attacker model that iterates against your current configuration.
+
+Points 3 and 5 are what I built into [AgentOverwatch](/projects/agentoverwatch): a gateway between the agent and its tools that applies argument rules on every call and treats its layered injection scanner as one signal among several, not the final gate. I covered the tool-level attacks it targets, poisoned descriptions and rug pulls, in [MCP tool poisoning: how a tool description steals your keys](/blog/mcp-tool-poisoning).
+
+## Where does this fit in a real enterprise stack?
+
+Every pattern here gets harder when the tools are old systems with broad service accounts. A plan-then-execute agent is only as safe as the narrowest credential its tools hold, which is why the integration choices in [How real teams connect AI to 40-year-old systems](/blog/connecting-ai-to-legacy-systems) matter for security, not only for delivery. And CaMeL-style policies depend on knowing who may read which data, which is a data ownership question before it is an AI one; [Is your data AI-ready?](/blog/is-your-data-ai-ready) covers that side.
+
+The short version: assume the model will be fooled, and design so that being fooled is not enough.
