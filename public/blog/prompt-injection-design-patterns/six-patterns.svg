@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" font-family="Inter, Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#334155"/></marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#dc2626"/></marker>
+    <style>
+      .t{font-size:20px;font-weight:700;fill:#0f172a}
+      .s{font-size:13px;fill:#475569}
+      .b{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
+      .u{fill:#fef2f2;stroke:#f87171;stroke-width:1.5}
+      .g{fill:#f0fdf4;stroke:#22c55e;stroke-width:1.5}
+      .l{font-size:14px;fill:#0f172a;text-anchor:middle}
+      .lr{font-size:14px;fill:#991b1b;text-anchor:middle}
+      .k{stroke:#334155;stroke-width:1.8;fill:none}
+      .kr{stroke:#dc2626;stroke-width:1.8;fill:none;stroke-dasharray:5 4}
+      .wall{stroke:#16a34a;stroke-width:3;stroke-dasharray:8 5}
+      .p{fill:#f8fafc;stroke:#cbd5e1}
+      .m{font-family:JetBrains Mono,Consolas,monospace;font-size:13px}
+    </style>
+  </defs>
+  <rect width="1200" height="900" fill="#ffffff"/>
+  <text x="40" y="48" font-size="26" font-weight="700" fill="#0f172a">Six design patterns that contain prompt injection</text>
+  <text x="40" y="76" font-size="16" fill="#475569">Red = untrusted data. Green dashed line = the boundary untrusted data cannot cross to choose an action.</text>
+
+  <!-- Panel 1: Action selector -->
+  <rect class="p" x="40" y="100" width="360" height="370" rx="14"/>
+  <text class="t" x="60" y="132">1. Action-selector</text>
+  <text class="s" x="60" y="154">LLM picks one predefined action. Nothing returns.</text>
+  <rect class="b" x="70" y="185" width="120" height="50" rx="8"/><text class="l" x="130" y="215">User request</text>
+  <rect class="g" x="220" y="185" width="150" height="50" rx="8"/><text class="l" x="295" y="215">LLM (selector)</text>
+  <path class="k" d="M190 210H218" marker-end="url(#a)"/>
+  <rect class="b" x="80" y="300" width="80" height="40" rx="6"/><text class="l" x="120" y="325">refund()</text>
+  <rect class="b" x="175" y="300" width="100" height="40" rx="6"/><text class="l" x="225" y="325">reset_pw()</text>
+  <rect class="b" x="290" y="300" width="90" height="40" rx="6"/><text class="l" x="335" y="325">handoff()</text>
+  <path class="k" d="M295 235V298" marker-end="url(#a)"/>
+  <rect class="u" x="160" y="390" width="200" height="40" rx="6"/><text class="lr" x="260" y="415">tool output (untrusted)</text>
+  <line class="wall" x1="70" y1="370" x2="380" y2="370"/>
+  <text class="s" x="70" y="452">Tool output never reaches the LLM.</text>
+
+  <!-- Panel 2: Plan then execute -->
+  <rect class="p" x="420" y="100" width="360" height="370" rx="14"/>
+  <text class="t" x="440" y="132">2. Plan-then-execute</text>
+  <text class="s" x="440" y="154">Plan is frozen before any untrusted data is read.</text>
+  <rect class="g" x="450" y="180" width="300" height="70" rx="8"/>
+  <text class="m" x="465" y="205" style="fill:#14532d">plan = [read_inbox(),</text>
+  <text class="m" x="465" y="225" style="fill:#14532d">        summarize(), send(to=me)]</text>
+  <line class="wall" x1="450" y1="275" x2="750" y2="275"/>
+  <rect class="b" x="450" y="300" width="140" height="44" rx="8"/><text class="l" x="520" y="327">Executor</text>
+  <rect class="u" x="610" y="300" width="140" height="44" rx="8"/><text class="lr" x="680" y="327">email bodies</text>
+  <path class="kr" d="M610 322H592" marker-end="url(#r)"/>
+  <path class="k" d="M520 250V298" marker-end="url(#a)"/>
+  <text class="s" x="450" y="380">Injection cannot add a tool call.</text>
+  <text class="s" x="450" y="400" style="fill:#b91c1c">It can still change the text written</text>
+  <text class="s" x="450" y="418" style="fill:#b91c1c">into an allowed call (data flow).</text>
+
+  <!-- Panel 3: Map-reduce -->
+  <rect class="p" x="800" y="100" width="360" height="370" rx="14"/>
+  <text class="t" x="820" y="132">3. LLM map-reduce</text>
+  <text class="s" x="820" y="154">One isolated, tool-less LLM per untrusted item.</text>
+  <rect class="u" x="830" y="180" width="90" height="38" rx="6"/><text class="lr" x="875" y="204">CV 1</text>
+  <rect class="u" x="935" y="180" width="90" height="38" rx="6"/><text class="lr" x="980" y="204">CV 2</text>
+  <rect class="u" x="1040" y="180" width="90" height="38" rx="6"/><text class="lr" x="1085" y="204">CV 3</text>
+  <rect class="b" x="830" y="245" width="90" height="38" rx="6"/><text class="l" x="875" y="269">LLM, no tools</text>
+  <rect class="b" x="935" y="245" width="90" height="38" rx="6"/><text class="l" x="980" y="269">LLM, no tools</text>
+  <rect class="b" x="1040" y="245" width="90" height="38" rx="6"/><text class="l" x="1085" y="269">LLM, no tools</text>
+  <path class="kr" d="M875 218V243" marker-end="url(#r)"/><path class="kr" d="M980 218V243" marker-end="url(#r)"/><path class="kr" d="M1085 218V243" marker-end="url(#r)"/>
+  <line class="wall" x1="830" y1="305" x2="1130" y2="305"/>
+  <text class="m" x="840" y="330" style="fill:#14532d">score: int 0-10  (schema check)</text>
+  <rect class="g" x="880" y="350" width="200" height="44" rx="8"/><text class="l" x="980" y="377">Reduce: rank by score</text>
+  <text class="s" x="830" y="430">Only constrained values (a number)</text>
+  <text class="s" x="830" y="448">cross into the reduce step.</text>
+
+  <!-- Panel 4: Dual LLM -->
+  <rect class="p" x="40" y="490" width="360" height="370" rx="14"/>
+  <text class="t" x="60" y="522">4. Dual LLM</text>
+  <text class="s" x="60" y="544">Privileged LLM sees only variable names.</text>
+  <rect class="g" x="60" y="570" width="150" height="60" rx="8"/><text class="l" x="135" y="596">Privileged LLM</text><text class="s" x="135" y="616" text-anchor="middle">has tools</text>
+  <rect class="b" x="235" y="570" width="145" height="60" rx="8"/><text class="l" x="307" y="596">Controller</text><text class="s" x="307" y="616" text-anchor="middle">plain code</text>
+  <path class="k" d="M210 600H233" marker-end="url(#a)"/>
+  <text class="m" x="70" y="660" style="fill:#14532d">"summarize $VAR1 -> $VAR2"</text>
+  <line class="wall" x1="60" y1="680" x2="380" y2="680"/>
+  <rect class="u" x="60" y="705" width="150" height="60" rx="8"/><text class="lr" x="135" y="731">Quarantined LLM</text><text class="s" x="135" y="751" text-anchor="middle">no tools</text>
+  <rect class="u" x="235" y="705" width="145" height="60" rx="8"/><text class="lr" x="307" y="740">$VAR1 = email</text>
+  <path class="k" d="M307 630V703" marker-end="url(#a)"/>
+  <path class="kr" d="M235 735H212" marker-end="url(#r)"/>
+  <text class="s" x="60" y="800">Untrusted text is stored by the controller</text>
+  <text class="s" x="60" y="818">and never pasted back to the planner.</text>
+
+  <!-- Panel 5: Code then execute -->
+  <rect class="p" x="420" y="490" width="360" height="370" rx="14"/>
+  <text class="t" x="440" y="522">5. Code-then-execute</text>
+  <text class="s" x="440" y="544">LLM writes a program first; interpreter runs it.</text>
+  <rect class="g" x="450" y="565" width="300" height="92" rx="8"/>
+  <text class="m" x="465" y="590" style="fill:#14532d">notes = read_file("notes.txt")</text>
+  <text class="m" x="465" y="610" style="fill:#14532d">addr = q_llm(notes, EmailStr)</text>
+  <text class="m" x="465" y="630" style="fill:#14532d">doc  = q_llm(notes, FileName)</text>
+  <text class="m" x="465" y="650" style="fill:#14532d">send_email(addr, doc)</text>
+  <line class="wall" x1="450" y1="675" x2="750" y2="675"/>
+  <rect class="b" x="450" y="695" width="140" height="44" rx="8"/><text class="l" x="520" y="722">Interpreter</text>
+  <rect class="u" x="610" y="695" width="140" height="44" rx="8"/><text class="lr" x="680" y="722">notes.txt</text>
+  <path class="kr" d="M610 717H592" marker-end="url(#r)"/>
+  <text class="s" x="450" y="775">Program is fixed before data is read.</text>
+  <text class="s" x="450" y="795">Add value tags + policies on each call</text>
+  <text class="s" x="450" y="813">and you get CaMeL (next diagram).</text>
+
+  <!-- Panel 6: Context minimization -->
+  <rect class="p" x="800" y="490" width="360" height="370" rx="14"/>
+  <text class="t" x="820" y="522">6. Context-minimization</text>
+  <text class="s" x="820" y="544">Drop the user prompt once it became actions.</text>
+  <rect class="u" x="830" y="570" width="300" height="44" rx="8"/><text class="lr" x="980" y="597">User prompt (may be the attacker)</text>
+  <rect class="g" x="830" y="640" width="300" height="44" rx="8"/><text class="l" x="980" y="667">LLM 1 -> SQL query (validated)</text>
+  <path class="kr" d="M980 614V638" marker-end="url(#r)"/>
+  <line class="wall" x1="830" y1="705" x2="1130" y2="705"/>
+  <rect class="b" x="830" y="725" width="300" height="44" rx="8"/><text class="l" x="980" y="752">LLM 2 answers from rows only</text>
+  <path class="k" d="M980 684V723" marker-end="url(#a)"/>
+  <text class="s" x="830" y="800">The second call never sees the original</text>
+  <text class="s" x="830" y="818">prompt, so injected text in it is gone.</text>
+
+  <text x="40" y="885" font-size="13" fill="#64748b">Source: Beurer-Kellner et al., "Design Patterns for Securing LLM Agents against Prompt Injections", arXiv 2506.08837 (2025).</text>
+</svg>
